@@ -19,7 +19,7 @@ import lib6005.parser.*;
  * Declare concrete variants of Expression in their own Java source files.
  */
 public interface Expression {
-	enum ExpressionGrammar {ROOT, SUM, PRIMITIVE, NUMBER, WHITESPACE, PRODUCT, VARIABLE};
+	enum ExpressionGrammar {ROOT, SUM, PRIMITIVE, NUMBER, WHITESPACE, PRODUCT, VARIABLE, ADD, MULTI};
     
     // Datatype definition
     //   TODO
@@ -57,6 +57,7 @@ public interface Expression {
     	System.out.println(" name of node at the start of function:" +p.getName());
     	List<ParseTree<ExpressionGrammar>> childrenOfRoot = p.children();
     	System.out.println("Children of " +p.getName() + ": " +childrenOfRoot);
+    	System.out.println("Size of childen of " + p.getName() + ":" + childrenOfRoot.size());
     	//System.out.println("Name of children of root" +childrenOfRoot.get(0).getName());
     	List<ParseTree<ExpressionGrammar>> childrenByName = p.childrenByName(ExpressionGrammar.PRODUCT);
     	System.out.println("List formed by childrenByNAme:" +childrenByName);
@@ -64,9 +65,10 @@ public interface Expression {
     	switch (p.getName()) {
     		case NUMBER : 
     			System.out.println("number \"" + p.getContents() + "\" created" );
-    			return new Value(Integer.parseInt(p.getContents()));
+    			return new Value(Double.parseDouble(p.getContents()));
     			
     		case ROOT:
+    			//p.display();
     			//root will have either a sum or a product
     			List<ParseTree<ExpressionGrammar>> childOfRootSUM = p.childrenByName(ExpressionGrammar.SUM);
     			System.out.println("childOfRootSUM in Root case" +childOfRootSUM);
@@ -99,11 +101,12 @@ public interface Expression {
     			{
     				throw new RuntimeException("sum must have a non whitespace child:" + p);
     			}
-    			return result;
+    			return result; 
     			
     		case PRIMITIVE:
     			//Primitive will have either a number, a variable, sum or a product.
     			System.out.println("Inside case PRIMITIVE");
+    			System.out.println("children of primitive in Case primitive" +p.children());
     			if(p.childrenByName(ExpressionGrammar.NUMBER).isEmpty() && p.childrenByName(ExpressionGrammar.VARIABLE).isEmpty() && p.childrenByName(ExpressionGrammar.SUM).isEmpty())
     			{
     				//Product
@@ -135,6 +138,13 @@ public interface Expression {
     			boolean firstProduct = true;
     			Expression resultProduct = null;
     			Integer counter = 0;
+    			System.out.println("p.getContents in case PRODUCT: " +p.getContents());
+    			List<ParseTree<ExpressionGrammar>> childrenOfProduct = p.childrenByName(ExpressionGrammar.PRIMITIVE);
+    			System.out.println("Number of PRIMITIVE child in product " +childrenOfProduct);
+    			List<ParseTree<ExpressionGrammar>> SignsForProduct = p.childrenByName(ExpressionGrammar.ADD);
+    			System.out.println("Number of ADD children in Product case: " +SignsForProduct.size());
+    			
+    			int testFlag = 2;
     			for(ParseTree<ExpressionGrammar> child : p.childrenByName(ExpressionGrammar.PRIMITIVE))
     			{
     				if(firstProduct)
@@ -145,13 +155,91 @@ public interface Expression {
     				}
     				else
     				{
-    					resultProduct = new Multiplication(resultProduct, buildAST(child));
-    					counter += 1;
+    					if(counter < 2)
+    					{
+    						resultProduct = new Multiplication(resultProduct, buildAST(child));
+        					counter += 1;
+    					}
+    					else
+    					{
+    						System.out.println("in else condition counter > 2");
+    						if(p.childrenByName(ExpressionGrammar.ADD).size() == 0)
+    						{
+    							
+    							resultProduct = new Multiplication(resultProduct, buildAST(child));
+            					counter += 1;
+    						}
+    						else
+    						{
+    							int counterForAllChildren = 0;
+    							System.out.println("Children before loop:" +p.children());
+    							
+    							for(ParseTree<ExpressionGrammar> eachchild : p.children())
+    							{
+    								
+    								System.out.println("Name: "+eachchild.getName());
+    								System.out.println("testFlag: " +testFlag);
+    								System.out.println("counterForAllChildren: " +counterForAllChildren);
+    								if(eachchild.getName().toString() == "ADD" && counterForAllChildren >= testFlag)
+    								{
+    									
+    									System.out.println("inside ADD clause");
+    									if(p.children().get(counterForAllChildren + 1).getName().toString() != "WHITESPACE")
+    									{
+    										resultProduct = new Addition(resultProduct, buildAST(p.children().get(counterForAllChildren + 1)));
+        									counter +=1;
+    									}
+    									else  
+    									{
+    										//TO skip if next sibling in tree is a WhiteSPace or sequences of White spaces
+    										for (int i = counterForAllChildren + 1; i < p.children().size(); i++)
+    										{
+    											System.out.println("Debug in For loop to skip whitespace: Name: " +p.children().get(i).getName().toString());
+    											if(p.children().get(i).getName().toString() == "WHITESPACE")
+    											{
+    												continue;
+    											}
+    											else
+    											{
+    												resultProduct = new Addition(resultProduct, buildAST(p.children().get(i)));
+    	        									counter +=1;
+    	        								}
+    										}
+    									}
+    									
+    									
+    									testFlag = counterForAllChildren + 1;
+    									
+    									
+    									
+    									
+    									
+    									break;
+    								}
+    								else if(eachchild.getName().toString() == "MULTI" && counterForAllChildren >= testFlag && eachchild.getName().toString() != "WHITESPACE")
+    								{
+    									
+    									
+    									
+    									System.out.println("inside Multi clause");
+    									resultProduct = new Multiplication(resultProduct, buildAST(p.children().get(counterForAllChildren + 1)));
+    									counter +=1;
+    									
+    									
+    									testFlag = counterForAllChildren + 1;
+    									
+    									
+    									
+    								}
+    								counterForAllChildren +=1;
+    								//testFlag += 1;
+    							}
+    						}
+    					}
+    					
+    					
     				}
-    				if(counter >= 2)
-    				{
-    					break;
-    				}
+    				
     			}
     			
     			if(firstProduct)

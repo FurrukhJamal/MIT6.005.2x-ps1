@@ -13,10 +13,14 @@
  */
 @skip whitespace{
     root ::= product | sum ;
-    sum ::= primitive (('+' primitive) | ('*' primitive))*;
-    product ::= primitive (('*' primitive) | ('+' primitive))*;
+    sum ::= primitive ((add primitive) | (multi primitive))*;
+    product ::= primitive ((multi primitive) | (add primitive))*;
     primitive ::= variable | number | '(' sum ')' | '(' product ')';
 }
 whitespace ::= [ \t\r\n];
 number ::= [0-9]+('.'[0-9]+)*;
 variable ::= [a-zA-Z]+;
+add ::= '+';
+multi ::= '*';
+
+

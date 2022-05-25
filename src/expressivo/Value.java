@@ -11,6 +11,7 @@ public class Value implements Expression {
 	}
 	
 	public Value(double num) {
+		
 		this.num = num;
 		this.checkRep();
 	}
