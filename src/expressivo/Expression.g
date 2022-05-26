@@ -12,10 +12,11 @@
  * For more information, see the parsers reading.
  */
 @skip whitespace{
-    root ::= product | sum ;
-    sum ::= primitive ((add primitive) | (multi primitive))*;
-    product ::= primitive ((multi primitive) | (add primitive))*;
-    primitive ::= variable | number | '(' sum ')' | '(' product ')';
+    root ::= expr;
+    expr ::= product | sum ;
+    sum ::= primitive (add primitive)* (multi number)*;
+    product ::= primitive (multi primitive)* (add number)*;
+    primitive ::= variable | number | '(' sum ')' | '(' product ')' ;
 }
 whitespace ::= [ \t\r\n];
 number ::= [0-9]+('.'[0-9]+)*;
