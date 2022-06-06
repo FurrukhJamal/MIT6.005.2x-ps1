@@ -103,7 +103,105 @@ public class ExpressionTest {
     
     /*Test for expressions*/
     @Test
-    public void testExpression() {
+    public void testExpressionNumAndVariable() {
+    	String test = "x + 1";
+    	Expression result = Expression.parse(test);
+    	
+    	assertEquals("x + 1 return as x + 1", new Addition(new Variable("x"), new Value(1)), result );
     	
     }
+    
+    @Test
+    public void testExpressionSumOfProducts() {
+    	String test = "(3)*(x) + y *(y)";
+    	Expression result = Expression.parse(test);
+    	
+    	assertEquals("3 * x +y*y as 3 * x +y*y", new Addition(new Multiplication(new Value(3), new Variable("x")), new Multiplication(new Variable("y") , new Variable("y"))), result);
+    }
+    
+    @Test
+    public void testExpressionProductsofSums() {
+    	String test = "(4+x)*(6+x)";
+    	Expression result = Expression.parse(test);
+    	
+    	assertEquals("product of sums parsing", new Multiplication(new Addition(new Value(4), new Variable("x")), new Addition(new Value(6), new Variable("x"))).toString(), result.toString());
+    		
+    }
+    
+    @Test
+    //for Value
+    public void testdifferentiateValue() {
+    	String test = "1";
+    	Expression result = Expression.parse(test);
+    	Expression differentiatedString = result.differentiate("x");
+    	assertEquals("0", differentiatedString.toString());
+    	
+    }
+    
+    //for Variable 
+    @Test
+    public void testdDifferentiateVariable() {
+    	String test = "x";
+    	Expression result = Expression.parse(test);
+    	
+    	assertEquals(new Value(1), result.differentiate("x"));
+    }
+    
+    //for Addition
+    @Test
+    public void testDifferentiateAddition() {
+    	String test = "x + 1";
+    	Expression result = Expression.parse(test);
+    	
+    	assertEquals(new Value(1), result.differentiate("x"));
+   }
+    
+    //for Multiplication
+    @Test
+    public void testDifferentiateMultiplication() {
+    	String test = "x*x";
+    	Expression result = Expression.parse(test);
+    	
+    	assertEquals(new Addition(new Multiplication(new Variable("x"), new Value(1)),new Multiplication( new Variable("x"), new Value(1))), result.differentiate("x"));
+    }
+    
+    @Test
+    public void testaddExpr() {
+    	String test = "x * 8";
+    	Expression expr = Expression.parse(test);
+    	String addedExpr = "x";
+    	
+    	String result  = "(x * 8) + x";
+    	
+    	assertEquals(expr.addExpr(Expression.parse(addedExpr)), Expression.parse(result));
+    	assertEquals(new Addition(new Multiplication(new Variable("x"), new Value(8)), new Variable("x")),expr.addExpr(Expression.parse(addedExpr)) );
+    }
+    
+    @Test
+    public void testaddExprSum() {
+    	String test = "x + 8";
+    	Expression expr = Expression.parse(test);
+    	Expression addedExpr = Expression.parse("x");
+    	
+    	String result = "x + x + 8";
+    	
+    	assertEquals(new Addition(new Addition(new Variable("x"), new Value(8)), new Variable("x")), expr.addExpr(addedExpr));
+    	
+    }
+    @Test 
+    public void testMultiplyExpr() {
+    	String test = "x + 8";
+    	Expression expr = Expression.parse(test);
+    	
+    	Expression addedExpr = Expression.parse("x");
+    	
+    	assertTrue(expr instanceof Addition);
+    	assertEquals(Expression.parse("x * x + 8 "), expr.multiplyExpr(addedExpr));
+    }
+    
+ //   @Test
+//    public void testSimplify() {
+//    	String test = "x";
+//    	Expression expr = Expression.parse
+//    }
 }

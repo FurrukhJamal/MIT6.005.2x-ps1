@@ -4,6 +4,7 @@ package expressivo;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import lib6005.parser.*;
 
@@ -19,7 +20,7 @@ import lib6005.parser.*;
  * Declare concrete variants of Expression in their own Java source files.
  */
 public interface Expression {
-	enum ExpressionGrammar {ROOT, SUM, PRIMITIVE, NUMBER, WHITESPACE, PRODUCT, VARIABLE, ADD, MULTI, EXPR};
+	enum ExpressionGrammar {ROOT, SUM, PRIMITIVE, NUMBER, WHITESPACE, PRODUCT, VARIABLE, ADD, MULTI, EXPR, SINGLE};
     
     // Datatype definition
     //   TODO
@@ -48,178 +49,97 @@ public interface Expression {
 		} catch (UnableToParseException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			throw new IllegalArgumentException(e.getMessage());
 		}
-		return null;
+		//return null;
     }
     
     /*Helper function for parse to build an abstract syntax tree*/
     public static Expression buildAST(ParseTree<ExpressionGrammar> p) {
-    	System.out.println(" name of node at the start of function:" +p.getName());
+    	//System.out.println(" name of node at the start of function:" +p.getName());
     	List<ParseTree<ExpressionGrammar>> childrenOfRoot = p.children();
-    	System.out.println("Children of " +p.getName() + ": " +childrenOfRoot);
-    	System.out.println("Size of childen of " + p.getName() + ":" + childrenOfRoot.size());
+    	//System.out.println("Children of " +p.getName() + ": " +childrenOfRoot);
+    	//System.out.println("Size of childen of " + p.getName() + ":" + childrenOfRoot.size());
     	//System.out.println("Name of children of root" +childrenOfRoot.get(0).getName());
     	List<ParseTree<ExpressionGrammar>> childrenByName = p.childrenByName(ExpressionGrammar.PRODUCT);
-    	System.out.println("List formed by childrenByNAme:" +childrenByName);
+    	//System.out.println("List formed by childrenByNAme:" +childrenByName);
     	
     	switch (p.getName()) {
     		case ROOT:
     			return buildAST(p.childrenByName(ExpressionGrammar.EXPR).get(0));
     			
     		case EXPR : 
-    			System.out.println("children of EXPR in case EXPR: " +p.children());
-    			System.out.println("Name in EXPR: " +p.children().get(0).getName());
-    			
+    			//System.out.println("children in EXpr: " +p.children());
+    			//System.out.println("Product in EXPR:" +p.childrenByName(ExpressionGrammar.PRODUCT).get(0));
+    			//System.out.println("ADD in EXPR: " +p.childrenByName(ExpressionGrammar.SUM).get(0));
     			return buildAST(p.children().get(0));
-    			
     		
     		case SUM:{
+    			
     			boolean first = true;
-    			Expression result = null;
-    			System.out.println("in SUM MULTI SIZE: " +p.childrenByName(ExpressionGrammar.MULTI).size());
-    			System.out.println("in SUM ADD SIZE: " +p.childrenByName(ExpressionGrammar.ADD).size());
-    			if(p.childrenByName(ExpressionGrammar.ADD).size() >= 1 && p.childrenByName(ExpressionGrammar.MULTI).size() >= 1)
-    			{
-    				System.out.println("inside the first if for sum");
-    				List<ParseTree<ExpressionGrammar>> exprChildren = p.children();
-    				int counter = 0;
-    				int positionOfLastPrimitive = 0;
-    				String operation = "";
-    				for(ParseTree<ExpressionGrammar> child : exprChildren)
-    				{
-    					System.out.println("child in SUM loop:" +child.getName());
-    					System.out.println("counter: " +counter);
-    					
-    					//save operation if ADD or Muliplication
-    					if (child.getName().toString() == "ADD")
-    					{
-    						operation = child.getContents().toString();
-    						
-    					}
-    					else if(child.getName().toString() == "MULTI")
-    					{
-    						operation = child.getContents().toString();
-    						System.out.println("operation is: " +operation);
-    					}
-    					
-    					if(child.getName().toString() == "PRIMITIVE" || child.getName().toString() == "NUMBER")
-    					{
-    						if(positionOfLastPrimitive == 0 && first)
-    						{
-    							result = buildAST(child);
-    							positionOfLastPrimitive = counter;
-    							counter += 1;
-    							first = false;
-    							continue;
-    						}
-    						
-    						if(!first)
-    						{
-    							System.out.println("!first hitting");
-    							if(counter <= 2)
-    							{
-    								System.out.println("First sum created");
-    								result = new Addition(result, buildAST(child));
-    							}
-    							else
-    							{
-    								System.out.println("Else for counter <=2 hitting");
-    								System.out.println("Operation: " +operation);
-    								if(operation.equals("*"))
-    	    						{
-    	    							System.out.println("Inside operation = " +operation);
-    	    							positionOfLastPrimitive = counter;
-    	    							//result = new Multiplication(buildAST(exprChildren.get(positionOfLastPrimitive)), buildAST(child));
-    	    							result = new Multiplication(result, buildAST(child));
-    	    							//result = buildAST(child);
-    	    							
-    	    						}
-    	    						if(operation.equals("+"))
-    	    						{
-    	    							System.out.println("Inside operation = " +operation);
-    	    							positionOfLastPrimitive = counter;
-    	    							//result = new Addition(buildAST(exprChildren.get(positionOfLastPrimitive)), buildAST(child));
-    	    							result = new Addition(result, buildAST(child));
-    	    							
-    	    						}
-    							}
-    						}
-    						
-    					}
-    					
-    					counter += 1;
-    				}
-    			}
-    			else if(p.childrenByName(ExpressionGrammar.SUM).size() == 1 && p.childrenByName(ExpressionGrammar.MULTI).size() == 0)
-    			{
-    				System.out.println("inside condition sum = 1");
-    				//return buildAST(p.childrenByName(ExpressionGrammar.SUM).get(0));
-    				for(ParseTree<ExpressionGrammar> child : p.childrenByName(ExpressionGrammar.PRIMITIVE))
-        			{
-        				if(first)
-        				{
-        					result = buildAST(child);
-        					first = false;
-        				}
-        				else 
-        				{
-        					result = new Addition(result, buildAST(child));
-        			
-        				}
-        			}
-    			}
-    			else if(p.childrenByName(ExpressionGrammar.PRODUCT).size() == 1)
-    			{
-    				System.out.println("inside condition Product = 1");
-    				return buildAST(p.childrenByName(ExpressionGrammar.PRODUCT).get(0));
-    			}//result = new Addition(result , buildAST(child));
-				
-			 			
-    			
-    			
-    			if(first)
-    			{
-	    			throw new RuntimeException("sum must have a non whitespace child:" + p);
-	    		}
-	    			return result;
+                Expression result = null;
+                
+                for(ParseTree<ExpressionGrammar> child : p.childrenByName(ExpressionGrammar.PRODUCT)){                
+                    if(first){
+                        result = buildAST(child);
+                        first = false;
+                    }else{
+                        result = new Addition(result, buildAST(child));
+                    }
+                }
+                if (first) {
+                    throw new RuntimeException("sum must have a non whitespace child:" + p);
+                }
+                return result;
     		}
     		
     		case PRODUCT:
     		{
     			boolean first = true;
-    			Expression result = null;
-    			for(ParseTree<ExpressionGrammar> child : p.childrenByName(ExpressionGrammar.PRIMITIVE))
-    			{
-    				if(first)
-    				{
-    					result = buildAST(child);
-    					first = false;
-    				}
-    				else 
-    				{
-    					result = new Multiplication(result , buildAST(child));
-    				}
-    			
-    			}
-    			
-    			
-				if(first)
-	    		{
-	    			throw new RuntimeException("sum must have a non whitespace child:" + p);
-	    		}
-	    		return result;
+                Expression result = null;
+                
+                if(p.childrenByName(ExpressionGrammar.PRIMITIVE).size() == 1)
+                {
+                	return buildAST(p.childrenByName(ExpressionGrammar.PRIMITIVE).get(0));
+                }
+                
+                for(ParseTree<ExpressionGrammar> child : p.childrenByName(ExpressionGrammar.PRIMITIVE)){                
+                    if(first){
+                        result = buildAST(child);
+                        first = false;
+                    }else{
+                        result = new Multiplication(result, buildAST(child));
+                    }
+                }
+                if (first) {
+                    throw new RuntimeException("sum must have a non whitespace child:" + p);
+                }
+                return result;
     		}
-    		
+    			    			
+    		case NUMBER:
+    			//System.out.println(p.getContents() + " created");
+    			return new Value(Double.parseDouble(p.getContents()));
+    			
     		case PRIMITIVE:
-    			if(p.childrenByName(ExpressionGrammar.SUM).size() == 0 && p.childrenByName(ExpressionGrammar.PRODUCT).size() == 0 && p.childrenByName(ExpressionGrammar.VARIABLE).size() == 0)
+    		{
+    			if(p.childrenByName(ExpressionGrammar.EXPR).size() == 1)
+    			{
+    				return buildAST(p.childrenByName(ExpressionGrammar.EXPR).get(0));
+    			}
+    			else if(p.childrenByName(ExpressionGrammar.VARIABLE).size() == 1)
+    			{
+    				return buildAST(p.childrenByName(ExpressionGrammar.VARIABLE).get(0));
+    			}
+    			else
     			{
     				return buildAST(p.childrenByName(ExpressionGrammar.NUMBER).get(0));
     			}
-    			return null;
-    			
-    		case NUMBER:
-    			System.out.println(p.getContents() + " created");
-    			return new Value(Double.parseDouble(p.getContents()));
+    		}
+    		
+    		
+    		case VARIABLE:
+    			return new Variable(p.getContents());
     			
     		case WHITESPACE:
     			throw new RuntimeException("You should never reach here:" + p);
@@ -421,7 +341,7 @@ public interface Expression {
 //    			throw new RuntimeException("You should never reach here:" + p);
     		
     	}
-		System.out.println("Hitting null in AST");
+		//System.out.println("Hitting null in AST");
     	return null;
     }
     
@@ -449,6 +369,48 @@ public interface Expression {
     public int hashCode();
     
     // TODO more instance methods
+    
+    
+    /*
+     * @param
+     * String representation of an expression
+     * @return an differentiated Expression where a Variable is converted to 1 and an Value to zero and subsequent 
+     * multiplication and additions call this function recursively*/
+    	
+    public Expression differentiate(String variable);
+    
+    
+    /*
+     * @param and Expression to be added to this expression
+     * x => x + new expression*/
+    public Expression addExpr(Expression otherExpr);
+
+	/*@param
+	 * double value of what is to be added
+	 * @returns expression such that 1 + new Val or variable + variable or recursive addition or multplication for subsequent types*/
+    public Expression addConstant(double num);
+    
+    
+    
+    public Expression multiplyExpr(Expression factorToMultiplyWith);
+    
+    
+    public Expression addVariable(String name);
+
+	//public Expression addExpr(Value otherExpr);
+    
+    
+    /*
+     * @param takes in a mapping for all the values for variables in the envoirnment.
+     * The variables are case sensitive and the envoirnment must not be empty null and assumes if the key is there in enovirnment it wont be empty
+     * @returns and simplfied expression*/
+    public Expression substitute(Map<String, Double> envoirnment);
+    
+    
+    
+    public Expression addCoefficient(double num);
+
+	
     
     /* Copyright (c) 2015-2017 MIT 6.005 course staff, all rights reserved.
      * Redistribution of original or derived work requires permission of course staff.

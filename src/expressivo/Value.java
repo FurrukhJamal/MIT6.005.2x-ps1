@@ -2,6 +2,7 @@ package expressivo;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.util.Map;
 
 public class Value implements Expression {
 	private final double num;
@@ -14,6 +15,10 @@ public class Value implements Expression {
 		
 		this.num = num;
 		this.checkRep();
+	}
+	
+	private double getNum() {
+		return this.num;
 	}
 	
 	@Override 
@@ -52,4 +57,97 @@ public class Value implements Expression {
 		return Math.abs(this.num - thatNum) < EPSILON;
 	}
 	
+	
+	@Override
+	public Expression differentiate(String variable)
+	{
+		assert variable != null && variable != "" : "the supplied variable for type variable is undefined";
+		//derivative of a constant is always zero
+		return new Value(0);
+	}
+	
+	
+	
+	
+	@Override
+	public Expression addExpr(Expression otherExpr)
+	{
+		assert otherExpr != null ;
+		
+		if(this.equals(otherExpr))
+		{
+			double newNum = this.num * 2;
+			return new Value(newNum);
+		}
+		
+		Value zero = new Value(0);
+		
+		if(otherExpr.equals(zero))
+		{
+			return this;
+		}
+		else if(this.equals(zero))
+		{
+			return otherExpr;
+		}
+		else
+		{
+			
+//			double num = this.num + otherExpr.getNum();
+//			Value newVal = new /Value(num);
+//		
+//			
+//			//return new Addition(this, newVal);
+//			return newVal;
+			return otherExpr.addConstant(this.num);
+		}
+		
+		//return null;
+		
+	}
+	
+	@Override
+	public Expression addConstant(double num)
+	{
+		return new Value(num + this.num);
+	}
+	
+	@Override
+	public Expression multiplyExpr(Expression factor)
+	{
+		if(factor.equals(new Value(0)))
+		{
+			return new Value(0);
+		}
+		if(factor.equals(new Value(1)))
+		{
+			return this;
+		}
+		if(this.equals(new Value(1)))
+		{
+			return factor;
+		}
+		
+		return factor.addCoefficient(this.num);
+	}
+	
+	@Override
+	public Expression addVariable(String name)
+	{
+		assert name != "" &&  name != null;
+		
+		return new Addition(this, new Variable(name));
+	}
+	
+	@Override 
+	public Expression substitute(Map<String, Double> envoirnment)
+	{
+		return this;
+	}
+	
+	@Override
+	public Expression addCoefficient(double num)
+	{
+		return new Value(this.num * num);
+	}
 }
